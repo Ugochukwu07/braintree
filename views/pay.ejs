@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://js.braintreegateway.com/web/dropin/1.32.0/js/dropin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <form id="checkout-form">
+        <input type="text" name="first_name" placeholder="First Name">
+        <input type="text" name="last_name" placeholder="Last Name">
+        <input type="email" name="email" placeholder="Email Address">
+        <input type="text" name="phone" placeholder="Phone Number">
+        <button type="submit">Submit</button>
+      </form>
+      <div id="dropin-container"></div>
+      <script>
+        var form = document.getElementById("checkout-form");
+      
+        braintree.dropin.create(
+          {
+            authorization: "<%= id %>", // Replace with the client token obtained from your server
+            container: "#dropin-container"
+          },
+          function (createErr, instance) {
+            if (createErr) {
+              console.error(createErr);
+              return;   
+            }
+      
+            form.addEventListener("submit", function (event) {
+              event.preventDefault();
+      
+              instance.requestPaymentMethod(async function (err, payload) {
+                if (err) {
+                  console.error(err);
+                } else {
+                    // The Payment Method Nonce is in payload.nonce
+                    console.log("Payment Method Nonce:", payload.nonce);
+
+                    const formData = new FormData(myForm);
+                    formData.append("payment_token", payload.nonce); // Replace "SomeClassValue" with your desired class value
+
+                    try {
+                        // Send the form data as a POST request to the server using Axios
+                        const response = await axios.post("/api/braintree/customer/new", formData);
+                        // Handle the response from the server if needed
+                        console.log("Server Response:", response.data);
+                    } catch (error) {
+                        // Handle any errors that occurred during the request
+                        console.error("Error:", error);
+                    }
+                }
+              });
+            });
+          }
+        );
+      </script>
+      
+</body>
+</html>
